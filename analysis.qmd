@@ -1,0 +1,37 @@
+---
+title: "Cumulative"
+author: Naveed Ahmad
+format: html
+execute: 
+  echo: false
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(primer.data)
+```
+
+## Summary
+<div style="text-align: justify">Political ideology may have significance for presidential approval in elections. In this study using data from cooperative election survey 2020, I have attempted to answer the question; what is the average difference between political ideology groups for presidential approval of Trump in elections?</div>
+
+```{r}
+x <- ces |> 
+  filter(year == 2020) |> 
+  select(approval, education, ideology) |> drop_na() |>
+  slice_sample(n = 2000)
+```
+
+## Plot showing approval and ideology
+
+```{r}
+x |>
+  ggplot(aes(x = ideology, fill = approval)) +
+  geom_bar() +
+  labs(title = "Predidential approval and political ideology",
+       subtitle = "Most people strongly disapprove",
+       x = "political ideology",
+       y = "count",
+       fill = "approval of the president",
+       caption = "Data from CES")
+```
