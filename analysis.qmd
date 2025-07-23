@@ -34,7 +34,6 @@ x <- ces |>
   mutate(ideology = fct_drop(ideology))
 
 tidy_approval <- x
-print(tidy_approval)
 if (!dir.exists("data")) dir.create("data")
 write_rds(tidy_approval, "data/tidy_approval.rds")
 tidy_approval <- read_rds("data/tidy_approval.rds")
