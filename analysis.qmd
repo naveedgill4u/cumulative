@@ -16,10 +16,14 @@ library(broom)
 library(dplyr)
 library(gt)
 library(easystats)
+library(marginaleffects)
+library(ggplot2)
+library(forcats)
+library(janitor)
 ```
 
 ## Summary
-<div style="text-align: justify">Political ideology may have significance for presidential approval in elections. In this study using data from cooperative election survey 2020, I have attempted to answer the question; what is the average difference between political ideology groups for presidential approval of Trump in elections? However, our assumption of representatives of data may not hold good as data is collected from a group of people who may have different political ideology or activity then the whole population in this study.</div>
+<div style="text-align: justify">Political ideology may have significance for presidential approval in elections. In this study, using data from cooperative election survey 2020, I have attempted to answer the question; what is the average difference between political ideology groups and education for presidential approval of Trump in elections? However, my assumption of representatives of data may not hold good as data is collected from a group of people who may have different political ideology or activity then the whole population.I used cumulative regression model to predict presidential approval as function of political ideology and education. Predictions show that ideologically very conservative have the highest level of disapproval at around 5.45 with range from	5.34	to 5.55. However, with higher education and very liberal have the approval for presidential election of the President Trump.</div>
 
 ```{r}
 x <- ces |>
@@ -65,9 +69,9 @@ fit_approval <- polr(approval ~ ideology + education, data = x)
 
 ```{r}
 #| cache: true
-clean_approval <- fit_approval |>
+tidy_approval1 <- fit_approval |>
     tidy(conf.int = TRUE)
-print(clean_approval)
+print(tidy_approval1)
 ```
 
 ## Fitted Cumulative Logistic Regression Model
@@ -109,8 +113,8 @@ This is our Data Generating Mechanism
 
 ## Table showing coefficients and Conf.Interval
 ```{r}
- clean_approval|>
-  select(term, estimate, conf.low, conf.high, coef.type) |>
+ tidy_approval1|>
+  select(term, estimate, conf.low, conf.high) |>
   gt() |>
   tab_header(
     title = "Coefficients and Confidence Intervals"
@@ -122,11 +126,32 @@ This is our Data Generating Mechanism
   cols_label(
     estimate = "Estimate",
     conf.low = "95% CI Lower",
-    conf.high = "95% CI Upper",
-    coef.type = "Coefficient Type"
+    conf.high = "95% CI Upper"
   ) |>
   tab_options(
     table.border.top.width = px(2),
     table.border.bottom.width = px(2),
     column_labels.font.weight = "bold")
+```
+
+
+```{r}
+# Split predictors and thresholds
+predictors <- tidy_approval1 |> filter(!is.na(conf.low))
+thresholds <- tidy_approval1 |> filter(is.na(conf.low))
+
+# Plot with corrected column names
+ggplot(predictors, aes(x = estimate, y = fct_reorder(term, estimate))) +
+  geom_point(color = "#0072B2", size = 3) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2, color = "#0072B2") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray40") +
+  labs(
+    title = "Relationship of Ideology and Education on Presidential Approval",
+    subtitle = "Estimates with 95% Confidence Intervals from Ordinal Logistic Regression",
+    caption = "Data Source: CES 2020",
+    x = "Estimate",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(plot.caption = element_text(hjust = 0, face = "italic", size = 10))
 ```
